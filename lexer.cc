@@ -146,11 +146,11 @@ Token LexicalAnalyzer::ScanNumber()
                     input.GetChar(c);
                 }
 // We're not dealing with Hexadecimals but if we were...
-//                while(ishexnumber(c)){
-//                    tmp.lexeme += c;
-//                    input.GetChar(c);
-//                    a = BASE16NUM;
-//                }
+                while(ishexnumber(c)){
+                    tmp.lexeme += c;
+                    input.GetChar(c);
+                    a = BASE16NUM;
+                }
                 if (!input.EndOfInput()) {
                     input.UngetChar(c);
                 }
