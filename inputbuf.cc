@@ -28,7 +28,7 @@ char InputBuffer::UngetChar(char c)
     return c;
 }
 
-void InputBuffer::GetChar(char& c)
+char InputBuffer::GetChar(char& c)
 {
     if (!input_buffer.empty()) {
         c = input_buffer.back();
@@ -36,6 +36,7 @@ void InputBuffer::GetChar(char& c)
     } else {
         cin.get(c);
     }
+    return c;
 }
 
 string InputBuffer::UngetString(string s)

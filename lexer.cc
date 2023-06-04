@@ -83,96 +83,156 @@ TokenType LexicalAnalyzer::FindKeywordIndex(string s) {
     }
     return ERROR;
 }
-
-Token LexicalAnalyzer::ScanNumber() {
-    char c;
-
-    input.GetChar(c);
-    if (isdigit(c)) {
-        if (c == '0' || c == '1') {
-            tmp.lexeme = c;
+Token LexicalAnalyzer::ScanNumber()
+{
+    char memo[100]; // memoization technique to remember past variables
+    bool isFzero = false;
+    char a,b,c,d;
+    string cache1, cache2, cache3;
+    int position = 0, position2 = 0, isbase8 = 0;
+    input.GetChar(a);
+    if (isdigit(a)) {
+        if (a == '0') {
+            tmp.lexeme = "0";
+            isFzero = true;
         } else {
             tmp.lexeme = "";
-            while (!input.EndOfInput() && isdigit(c)) {
-                tmp.lexeme += c;
-                input.GetChar(c);
+            while ((!input.EndOfInput() && isdigit(a))) {
+                tmp.lexeme += a;
+                input.GetChar(a);
+                if(a == '8' || a == '9')
+                    isbase8 = 1;
             }
             if (!input.EndOfInput()) {
-                input.UngetChar(c);
+                input.UngetChar(a);
             }
         }
-        input.GetChar(c);
-        if (c == '.') {
+        input.GetChar(b);
+        if(b == 'x')
+        {
             input.GetChar(c);
-            if (isdigit(c)) {
-                tmp.lexeme += '.';
-                while (isdigit(c)) {
-                    tmp.lexeme += c;
-                    input.GetChar(c);
-                }
-                if (!input.EndOfInput()) {
-                    input.UngetChar(c);
-                }
-                tmp.token_type = REALNUM;
-            } else {
-                if (!input.EndOfInput()) {
-                    input.UngetChar(c);
-                }
-                input.UngetChar('.');
-                tmp.token_type = NUM;
-            }
-        }
-        else if (c == 'x') {
-            input.GetChar(c);
-            if (isdigit(c)) {
-                tmp.lexeme += 'x';
-                TokenType a = BASE08NUM;
-
-                int limit = 2;
-
-                while (isdigit(c)) {
-                    if (limit != 0) {
-                        limit--;
-                        if (c == '1') {
-                            a = BASE16NUM;
-                        } else if (c == '0') {
-                            a = BASE08NUM;
-                        }
+            if (c != '0') { // Not Base 8
+                if (c == '1') { // Looking Based 16
+                    input.GetChar(d);
+                    if (d == '6') { // BASE16
+                        tmp.lexeme = tmp.lexeme + b + c + d;
+                        tmp.token_type = BASE16NUM;
+                        tmp.line_no = line_no;
+                        return tmp;
                     } else {
-                        a = NUM;
+                        input.UngetChar(d);
                     }
-                    tmp.lexeme += c;
+                    input.UngetChar(c);
+                }
+            } else {
+                input.GetChar(d);
+                if (d == '8' && isbase8 == 0) { //Is likely Base8
+                    tmp.lexeme = tmp.lexeme + b + c + d;
+                    tmp.token_type = BASE08NUM;
+                    tmp.line_no = line_no;
+                    return tmp;
+                } else {
+                    input.UngetChar(d);
+                }
+                input.UngetChar(c);
+            }
+            input.UngetChar(b);
+        }
+        else if(b == '.') { // Check if Decimal
+            input.GetChar(c);
+            if(isdigit(c))
+            {
+                while (isdigit(c) && !input.EndOfInput())
+                {
+                    position++; // count digits
+                    if(c == '0')
+                        position2++; // count zeros only
+                    cache2 += c; // store value into cache2
                     input.GetChar(c);
                 }
-// We're not dealing with Hexadecimals but if we were...
-//                while(ishexnumber(c)){
-//                    tmp.lexeme += c;
-//                    input.GetChar(c);
-//                    a = BASE16NUM;
-//                }
-                if (!input.EndOfInput()) {
+                if (!input.EndOfInput())
+                {
                     input.UngetChar(c);
                 }
-                tmp.token_type = a;
-            } else {
-                if (!input.EndOfInput()) {
-                    input.UngetChar(c);
+                if (position != position2 || !isFzero) {
+                    input.UngetString(cache2);
+                    input.GetChar(c);
+                    tmp.lexeme += '.';
+                    while (!input.EndOfInput() && (isdigit(c))) {
+                        tmp.lexeme += c;
+                        input.GetChar(c);
+                    }
+                    if (!input.EndOfInput()) {
+                        input.UngetChar(c);
+                    }
+                    tmp.token_type = REALNUM;
+                    tmp.line_no = line_no;
+                    return tmp;
+                } else {
+                    input.UngetString(cache2);
                 }
-                input.UngetChar('x');
-                tmp.token_type = NUM;
             }
-        }
-        else {
-            if (!input.EndOfInput())
+            else
+            {
                 input.UngetChar(c);
-            tmp.token_type = NUM;
+            }
+            input.UngetChar(b);
         }
+        else if(isHexadecimal(a)) { // Check A-F
+            input.UngetChar(b);
+            input.GetChar(memo[position]);
+            while((isHexadecimal(memo[position]) && !input.EndOfInput()) || isdigit(memo[position]))
+            {
+                position++;
+                position2++;
+                input.GetChar(memo[position]);
+            }
+            if (memo[position] == 'x') {
+                input.GetChar(memo[position + 1]);
+                if (memo[position + 1] != '1') {
+                    input.UngetChar(memo[position + 1]);
+                } else {
+                    input.GetChar(memo[position + 2]);
+                    if (memo[position + 2] != '6') {
+                        input.UngetChar(memo[position + 2]);
+                        input.UngetChar(memo[position + 1]);
+                    } else {
+                        while (position > -3) {
+                            input.UngetChar(memo[position + 2]);
+                            position--;
+                        }
+                        while (position2 > -3) {
+                            position2--;
+                            input.GetChar(a);
+                            tmp.lexeme += a;
+                        }
+                        tmp.token_type = BASE16NUM;
+                        tmp.line_no = line_no;
+                        return tmp;
+                    }
+                }
+            }
+            while(position > 0)
+            {
+                input.UngetChar(memo[position]);
+                position--;
+            }
+            input.UngetChar(b);
+        }
+        else
+        {
+            input.UngetChar(b);
+        }
+        tmp.token_type = NUM;
+        tmp.line_no = line_no;
         return tmp;
     } else {
         if (!input.EndOfInput()) {
-            input.UngetChar(c);
+            input.UngetChar(a);
         }
+        tmp.lexeme = "";
         tmp.token_type = ERROR;
+        tmp.line_no = line_no;
         return tmp;
     }
 }
@@ -308,6 +368,7 @@ Token LexicalAnalyzer::GetToken() {
             }
             return tmp;
         default:
+
             if (isdigit(c)) {
                 input.UngetChar(c);
                 return ScanNumber();
