@@ -1,5 +1,7 @@
 #!/bin/bash
 
+g++ lexer.cc inputbuf.cc
+
 let count=0;
 let errors=0;
 for f in $(ls ./tests/*.txt); do 

@@ -28,7 +28,7 @@ string reserved[] = {"END_OF_FILE",
 string keyword[] = {"IF", "WHILE", "DO", "THEN", "PRINT"};
 
 bool isHexadecimal(char c) {
-    if((c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+    if ((c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
         return true;
     }
     return false;
@@ -84,14 +84,13 @@ TokenType LexicalAnalyzer::FindKeywordIndex(string s) {
     return ERROR;
 }
 
-Token LexicalAnalyzer::ScanNumber()
-{
+Token LexicalAnalyzer::ScanNumber() {
     char c;
 
     input.GetChar(c);
     if (isdigit(c)) {
-        if (c == '0') {
-            tmp.lexeme = "0";
+        if (c == '0' || c == '1') {
+            tmp.lexeme = c;
         } else {
             tmp.lexeme = "";
             while (!input.EndOfInput() && isdigit(c)) {
@@ -99,7 +98,13 @@ Token LexicalAnalyzer::ScanNumber()
                 input.GetChar(c);
             }
             if (!input.EndOfInput()) {
+                if(c == 'x') {
+                    input.UngetChar(c);
+                    tmp.token_type = NUM;
+                    return tmp;
+                }
                 input.UngetChar(c);
+
             }
         }
         input.GetChar(c);
@@ -122,8 +127,8 @@ Token LexicalAnalyzer::ScanNumber()
                 input.UngetChar('.');
                 tmp.token_type = NUM;
             }
-        } else if(c == 'x') {
-
+        }
+        else if (c == 'x') {
             input.GetChar(c);
             if (isdigit(c)) {
                 tmp.lexeme += 'x';
@@ -131,10 +136,10 @@ Token LexicalAnalyzer::ScanNumber()
 
                 int limit = 2;
 
-                while(isdigit(c)) {
-                    if(limit != 0) {
+                while (isdigit(c)) {
+                    if (limit != 0) {
                         limit--;
-                        if(c == '1') {
+                        if (c == '1') {
                             a = BASE16NUM;
                         } else if (c == '0') {
                             a = BASE08NUM;
@@ -162,7 +167,8 @@ Token LexicalAnalyzer::ScanNumber()
                 input.UngetChar('x');
                 tmp.token_type = NUM;
             }
-        } else {
+        }
+        else {
             if (!input.EndOfInput())
                 input.UngetChar(c);
             tmp.token_type = NUM;
