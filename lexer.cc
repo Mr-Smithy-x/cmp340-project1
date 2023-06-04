@@ -98,13 +98,7 @@ Token LexicalAnalyzer::ScanNumber() {
                 input.GetChar(c);
             }
             if (!input.EndOfInput()) {
-                if(c == 'x') {
-                    input.UngetChar(c);
-                    tmp.token_type = NUM;
-                    return tmp;
-                }
                 input.UngetChar(c);
-
             }
         }
         input.GetChar(c);
