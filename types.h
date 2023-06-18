@@ -171,7 +171,7 @@ Assignment createAssignment(Token lhs_token, Token rhs_token) {
         scope2[0] = '?';
         scope2[1] = '\0';
     }
-    // now we Assignment our scopes that we found  + token_1 to lhs and rhs accordingly
+    // now we Aasign our scopes that we found from lhs (token) & rhs (token3) to lhs and rhs accordingly
     struct Assignment temp_assignment;
     temp_assignment.lhs = lhs_token.lexeme;
     temp_assignment.rhs = rhs_token.lexeme;
