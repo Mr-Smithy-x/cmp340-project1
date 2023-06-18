@@ -182,19 +182,19 @@ Assignment createAssignment(Token lhs_token, Token rhs_token) {
 }
 
 void results() {
-    for (auto & assignment : assignments) {
-        std::cout << assignment.scope1;
+    for (int i = 0; i < assignments.size(); i++) {
+        std::cout << assignments[i].scope1;
 
-        if (::strcmp(assignment.scope1.c_str(), "::") != 0) {
+        if (::strcmp(assignments[i].scope1.c_str(), "::") != 0) {
             std::cout << ".";
         }
 
-        std::cout << assignment.lhs << " = " << assignment.scope2;
+        std::cout << assignments[i].lhs << " = " << assignments[i].scope2;
 
-        if (::strcmp(assignment.scope2.c_str(), "::") != 0) {
+        if (::strcmp(assignments[i].scope2.c_str(), "::") != 0) {
             std::cout << ".";
         }
 
-        std::cout << assignment.rhs << std::endl;
+        std::cout << assignments[i].rhs << std::endl;
     }
 }
