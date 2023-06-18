@@ -13,18 +13,15 @@
 
 // ------- token types -------------------
 
-typedef enum { END_OF_FILE = 0,
-    IF, WHILE, DO, THEN, PRINT,
-    PLUS, MINUS, DIV, MULT,
+typedef enum {
+    END_OF_FILE = 0,
+    PUBLIC, PRIVATE,
     EQUAL, COLON, COMMA, SEMICOLON,
-    LBRAC, RBRAC, LPAREN, RPAREN,
-    NOTEQUAL, GREATER, LESS, LTEQ, GTEQ,
-    DOT, NUM, ID, ERROR, REALNUM, BASE08NUM, BASE16NUM // TODO: Add labels for new token types here
+    LBRACE, RBRACE, ID, ERROR // TODO: Add labels for new token types here
 } TokenType;
 
 class Token {
-  public:
-    void Print();
+public:
 
     std::string lexeme;
     TokenType token_type;
@@ -32,22 +29,35 @@ class Token {
 };
 
 class LexicalAnalyzer {
-  public:
+public:
     Token GetToken();
     TokenType UngetToken(Token);
     LexicalAnalyzer();
+    int start();
 
-  private:
+private:
     std::vector<Token> tokens;
     int line_no;
     Token tmp;
     InputBuffer input;
 
+    int parseStatements();
+    int parseStatement();
+    int parseGlobalVariables();
+    int parseVariables();
+    int parseVariable(TokenType visibility);
+    int parseScope();
+    int handleGlobalVariablesAndScope();
+
     bool SkipSpace();
+    bool SkipComment();
+
     bool IsKeyword(std::string);
+
     TokenType FindKeywordIndex(std::string);
+
     Token ScanIdOrKeyword();
-    Token ScanNumber();
+
 };
 
 #endif  //__LEXER__H__

@@ -9,36 +9,43 @@
 #include <string>
 #include <cctype>
 
+#include "types.h"
 #include "lexer.h"
-#include "inputbuf.h"
+#include "debug.h"
+
+
+// you should unget tokens in the reverse order in which they
+// are obtained. If you execute
+//
+//    t1 = lexer.GetToken();
+//    t2 = lexer.GetToken();
+//    t3 = lexer.GetToken();
+//
+// in this order, you should execute
+//
+//    lexer.UngetToken(t3);
+//    lexer.UngetToken(t2);
+//    lexer.UngetToken(t1);
+//
+// if you want to unget all three tokens. Note that it does not
+// make sense to unget t1 without first ungetting t2 and t3
+//
 
 using namespace std;
 
 string reserved[] = {"END_OF_FILE",
-                     "IF", "WHILE", "DO", "THEN", "PRINT",
-                     "PLUS", "MINUS", "DIV", "MULT",
-                     "EQUAL", "COLON", "COMMA", "SEMICOLON",
-                     "LBRAC", "RBRAC", "LPAREN", "RPAREN",
-                     "NOTEQUAL", "GREATER", "LESS", "LTEQ", "GTEQ",
-                     "DOT", "NUM", "ID", "ERROR", "REALNUM", "BASE08NUM",
-                     "BASE16NUM" // TODO: Add labels for new token types here (as string)
+                     "PUBLIC", "PRIVATE",
+                     "EQUAL", "COLON",
+                     "COMMA", "SEMICOLON",
+                     "LBRACE", "RBRACE", "ID",
+                     "ERROR",
 };
 
-#define KEYWORDS_COUNT 5
-string keyword[] = {"IF", "WHILE", "DO", "THEN", "PRINT"};
+#define KEYWORDS_COUNT 2
+string keyword[] = {"public", "private"};
 
-bool isHexadecimal(char c) {
-    if ((c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
-        return true;
-    }
-    return false;
-}
-
-void Token::Print() {
-    cout << "{" << this->lexeme << " , "
-         << reserved[(int) this->token_type] << " , "
-         << this->line_no << "}\n";
-}
+LexicalAnalyzer lexer;
+Token token_1, token_2, token_3;
 
 LexicalAnalyzer::LexicalAnalyzer() {
     this->line_no = 1;
@@ -83,160 +90,6 @@ TokenType LexicalAnalyzer::FindKeywordIndex(string s) {
     }
     return ERROR;
 }
-Token LexicalAnalyzer::ScanNumber()
-{
-    char memo[100]; // memoization technique to remember past variables
-    bool isFzero = false;
-    char a,b,c,d;
-    string cache1, cache2, cache3;
-    int position = 0, position2 = 0, isbase8 = 0;
-    input.GetChar(a);
-    if (isdigit(a)) {
-        if (a == '0') {
-            tmp.lexeme = "0";
-            isFzero = true;
-        } else {
-            tmp.lexeme = "";
-            while ((!input.EndOfInput() && isdigit(a))) {
-                tmp.lexeme += a;
-                input.GetChar(a);
-                if(a == '8' || a == '9')
-                    isbase8 = 1;
-            }
-            if (!input.EndOfInput()) {
-                input.UngetChar(a);
-            }
-        }
-        input.GetChar(b);
-        if(b == 'x')
-        {
-            input.GetChar(c);
-            if (c != '0') { // Not Base 8
-                if (c == '1') { // Looking Based 16
-                    input.GetChar(d);
-                    if (d == '6') { // BASE16
-                        tmp.lexeme = tmp.lexeme + b + c + d;
-                        tmp.token_type = BASE16NUM;
-                        tmp.line_no = line_no;
-                        return tmp;
-                    } else {
-                        input.UngetChar(d);
-                    }
-                    input.UngetChar(c);
-                }
-            } else {
-                input.GetChar(d);
-                if (d == '8' && isbase8 == 0) { //Is likely Base8
-                    tmp.lexeme = tmp.lexeme + b + c + d;
-                    tmp.token_type = BASE08NUM;
-                    tmp.line_no = line_no;
-                    return tmp;
-                } else {
-                    input.UngetChar(d);
-                }
-                input.UngetChar(c);
-            }
-            input.UngetChar(b);
-        }
-        else if(b == '.') { // Check if Decimal
-            input.GetChar(c);
-            if(isdigit(c))
-            {
-                while (isdigit(c) && !input.EndOfInput())
-                {
-                    position++; // count digits
-                    if(c == '0')
-                        position2++; // count zeros only
-                    cache2 += c; // store value into cache2
-                    input.GetChar(c);
-                }
-                if (!input.EndOfInput())
-                {
-                    input.UngetChar(c);
-                }
-                if (position != position2 || !isFzero) {
-                    input.UngetString(cache2);
-                    input.GetChar(c);
-                    tmp.lexeme += '.';
-                    while (!input.EndOfInput() && (isdigit(c))) {
-                        tmp.lexeme += c;
-                        input.GetChar(c);
-                    }
-                    if (!input.EndOfInput()) {
-                        input.UngetChar(c);
-                    }
-                    tmp.token_type = REALNUM;
-                    tmp.line_no = line_no;
-                    return tmp;
-                } else {
-                    input.UngetString(cache2);
-                }
-            }
-            else
-            {
-                input.UngetChar(c);
-            }
-            input.UngetChar(b);
-        }
-        else if(isHexadecimal(a)) { // Check A-F
-            input.UngetChar(b);
-            input.GetChar(memo[position]);
-            while((isHexadecimal(memo[position]) && !input.EndOfInput()) || isdigit(memo[position]))
-            {
-                position++;
-                position2++;
-                input.GetChar(memo[position]);
-            }
-            if (memo[position] == 'x') {
-                input.GetChar(memo[position + 1]);
-                if (memo[position + 1] != '1') {
-                    input.UngetChar(memo[position + 1]);
-                } else {
-                    input.GetChar(memo[position + 2]);
-                    if (memo[position + 2] != '6') {
-                        input.UngetChar(memo[position + 2]);
-                        input.UngetChar(memo[position + 1]);
-                    } else {
-                        while (position > -3) {
-                            input.UngetChar(memo[position + 2]);
-                            position--;
-                        }
-                        while (position2 > -3) {
-                            position2--;
-                            input.GetChar(a);
-                            tmp.lexeme += a;
-                        }
-                        tmp.token_type = BASE16NUM;
-                        tmp.line_no = line_no;
-                        return tmp;
-                    }
-                }
-            }
-            while(position > 0)
-            {
-                input.UngetChar(memo[position]);
-                position--;
-            }
-            input.UngetChar(b);
-        }
-        else
-        {
-            input.UngetChar(b);
-        }
-        tmp.token_type = NUM;
-        tmp.line_no = line_no;
-        return tmp;
-    } else {
-        if (!input.EndOfInput()) {
-            input.UngetChar(a);
-        }
-        tmp.lexeme = "";
-        tmp.token_type = ERROR;
-        tmp.line_no = line_no;
-        return tmp;
-    }
-}
-
 
 Token LexicalAnalyzer::ScanIdOrKeyword() {
     char c;
@@ -252,10 +105,11 @@ Token LexicalAnalyzer::ScanIdOrKeyword() {
             input.UngetChar(c);
         }
         tmp.line_no = line_no;
-        if (IsKeyword(tmp.lexeme))
+        if (IsKeyword(tmp.lexeme)) {
             tmp.token_type = FindKeywordIndex(tmp.lexeme);
-        else
+        } else {
             tmp.token_type = ID;
+        }
     } else {
         if (!input.EndOfInput()) {
             input.UngetChar(c);
@@ -266,22 +120,6 @@ Token LexicalAnalyzer::ScanIdOrKeyword() {
     return tmp;
 }
 
-// you should unget tokens in the reverse order in which they
-// are obtained. If you execute
-//
-//    t1 = lexer.GetToken();
-//    t2 = lexer.GetToken();
-//    t3 = lexer.GetToken();
-//
-// in this order, you should execute
-//
-//    lexer.UngetToken(t3);
-//    lexer.UngetToken(t2);
-//    lexer.UngetToken(t1);
-//
-// if you want to unget all three tokens. Note that it does not
-// make sense to unget t1 without first ungetting t2 and t3
-//
 TokenType LexicalAnalyzer::UngetToken(Token tok) {
     tokens.push_back(tok);;
     return tok.token_type;
@@ -291,7 +129,7 @@ Token LexicalAnalyzer::GetToken() {
     char c;
 
     // if there are tokens that were previously
-    // stored due to UngetToken(), pop a token and
+    // stored due to UngetToken(), pop a token_1 and
     // return it without reading from input
     if (!tokens.empty()) {
         tmp = tokens.back();
@@ -300,25 +138,13 @@ Token LexicalAnalyzer::GetToken() {
     }
 
     SkipSpace();
+    SkipComment();
+    SkipSpace();
+
     tmp.lexeme = "";
     tmp.line_no = line_no;
     input.GetChar(c);
     switch (c) {
-        case '.':
-            tmp.token_type = DOT;
-            return tmp;
-        case '+':
-            tmp.token_type = PLUS;
-            return tmp;
-        case '-':
-            tmp.token_type = MINUS;
-            return tmp;
-        case '/':
-            tmp.token_type = DIV;
-            return tmp;
-        case '*':
-            tmp.token_type = MULT;
-            return tmp;
         case '=':
             tmp.token_type = EQUAL;
             return tmp;
@@ -331,47 +157,17 @@ Token LexicalAnalyzer::GetToken() {
         case ';':
             tmp.token_type = SEMICOLON;
             return tmp;
-        case '[':
-            tmp.token_type = LBRAC;
+        case '{':
+            tmp.token_type = LBRACE;
             return tmp;
-        case ']':
-            tmp.token_type = RBRAC;
-            return tmp;
-        case '(':
-            tmp.token_type = LPAREN;
-            return tmp;
-        case ')':
-            tmp.token_type = RPAREN;
-            return tmp;
-        case '<':
-            input.GetChar(c);
-            if (c == '=') {
-                tmp.token_type = LTEQ;
-            } else if (c == '>') {
-                tmp.token_type = NOTEQUAL;
-            } else {
-                if (!input.EndOfInput()) {
-                    input.UngetChar(c);
-                }
-                tmp.token_type = LESS;
-            }
-            return tmp;
-        case '>':
-            input.GetChar(c);
-            if (c == '=') {
-                tmp.token_type = GTEQ;
-            } else {
-                if (!input.EndOfInput()) {
-                    input.UngetChar(c);
-                }
-                tmp.token_type = GREATER;
-            }
+        case '}':
+            tmp.token_type = RBRACE;
             return tmp;
         default:
-
             if (isdigit(c)) {
                 input.UngetChar(c);
-                return ScanNumber();
+                tmp.token_type = ERROR;
+                return tmp;
             } else if (isalpha(c)) {
                 input.UngetChar(c);
                 return ScanIdOrKeyword();
@@ -384,14 +180,267 @@ Token LexicalAnalyzer::GetToken() {
     }
 }
 
-int main() {
-    LexicalAnalyzer lexer;
-    Token token;
-
-    token = lexer.GetToken();
-    token.Print();
-    while (token.token_type != END_OF_FILE) {
-        token = lexer.GetToken();
-        token.Print();
+bool LexicalAnalyzer::SkipComment() {
+    char c;
+    bool comment = false;
+    input.GetChar(c);
+    if (input.EndOfInput()) {
+        input.UngetChar(c);
+        return comment;
     }
+    if (c == '/') {
+        input.GetChar(c);
+        if (c == '/') {
+            comment = true;
+            while (c != '\n') {
+                input.GetChar(c);
+            }
+            line_no += 1;
+            SkipComment();
+        } else {
+            // We know that comments have two '//'
+            exit(1);
+        }
+    } else {
+        input.UngetChar(c);
+        return comment;
+    }
+}
+
+int LexicalAnalyzer::parseGlobalVariables() {
+    token_1 = lexer.GetToken();
+    if (token_1.token_type == ID) {
+        lexer.UngetToken(token_1);
+        lexer.parseVariables();
+        token_1 = lexer.GetToken();
+        if (token_1.token_type != SEMICOLON) {
+            Error();
+        }
+    } else {
+        Error();
+    }
+    return 0;
+}
+
+int LexicalAnalyzer::parseStatements() {
+    token_1 = lexer.GetToken();
+    if (token_1.token_type == ID) {
+        lexer.UngetToken(token_1);
+        lexer.parseStatement();
+        token_2 = lexer.GetToken();
+        if (token_2.token_type == ID) {
+            lexer.UngetToken(token_2);
+            lexer.parseStatements();
+            return 0;
+        } else if (token_2.token_type == RBRACE) {
+            // we are most likely exiting a scope...
+            lexer.UngetToken(token_2);
+            return 0;
+        } else {
+            Error();
+        }
+    } else {
+        Error();
+    }
+    return 0;
+}
+
+int LexicalAnalyzer::parseStatement() {
+    debugPrint("Parse Statement Reach");
+    token_1 = lexer.GetToken();
+    if (token_1.token_type == ID) { // token_1 ? ?
+        token_2 = lexer.GetToken();
+        if (token_2.token_type == EQUAL) { // lhs(token_1) =(token_2) ?
+            token_3 = lexer.GetToken();
+            // Next statement should be id, if not error
+            if (token_3.token_type == ID) { // lhs(token_1) =(token_2)  (rhs)token_3
+                createAssignment(token_1, token_3);
+                token_1 = lexer.GetToken();
+                // Statement should end in semicolon, if not error
+                if (token_1.token_type == SEMICOLON) { // lhs(token_1) =(token_2)  (rhs)token_3;
+                    debugPrint("Ends in Semi Colon");
+                    return 0;
+                } else {
+                    Error();
+                }
+            } else {
+                Error();
+            }
+        } else if (token_2.token_type == LBRACE) {
+            // token_1 { -> meaning we will be entering a scope because of left brace
+            currScope = const_cast<char *>((token_1.lexeme).c_str());
+            lexer.UngetToken(token_2);
+            lexer.UngetToken(token_1);
+            lexer.parseScope();
+        } else {
+            // failure
+            Error();
+        }
+    } else {
+        Error();
+    }
+    return 0;
+}
+
+int LexicalAnalyzer::parseVariables() {
+    token_1 = lexer.GetToken();
+
+    int lexemeSize = sizeof(token_1.lexeme);
+    int tokenSize = sizeof(token_1);
+
+    char *variable = (char *) malloc(lexemeSize);
+    memcpy(variable, token_1.lexeme.c_str(), tokenSize);
+
+    add(variable);
+
+    SymbolNode *temp1 = symbolNode;
+
+    // Go down the node list
+    while (temp1 != NULL) {
+        temp1 = temp1->next;
+    }
+
+    if (token_1.token_type == ID) {
+        token_1 = lexer.GetToken();
+        // if next token is comma most likely there will be more variables
+        if (token_1.token_type == COMMA) {
+            // we then parse recursively
+            lexer.parseVariables();
+            return 0;
+        }
+        // if next token is semicon, we reach end of parsing variables
+        else if (token_1.token_type == SEMICOLON) {
+            UngetToken(token_1);
+            return 0;
+        } else {
+            Error();
+        }
+    } else {
+        Error();
+    }
+}
+
+int LexicalAnalyzer::parseVariable(TokenType visibility) {
+    token_1 = lexer.GetToken();
+    if (token_1.token_type == visibility) {
+        currLevel = visibility;
+        token_1 = lexer.GetToken();
+        // after visibility scope, ie public or private, next character should be a colon if not error
+        if (token_1.token_type == COLON) {
+            token_1 = lexer.GetToken();
+            // we identify that there are possibily more variables to parse
+            // if not then thre is an error because after colon should logically be an id
+            if (token_1.token_type == ID) {
+                lexer.UngetToken(token_1);
+                lexer.parseVariables();
+                token_1 = lexer.GetToken();
+                // if it is not semicolon then we have an error
+                if (token_1.token_type != SEMICOLON) {
+                    Error();
+                }
+            } else {
+                Error();
+            }
+        } else {
+            Error();
+        }
+    } else if (token_1.token_type != visibility || token_1.token_type == ID) {
+        // since we know that token_type should be the visibility that we're looking for
+        // we know that if it is an ID then that is not a valid case, we should then
+        // exit the scenario
+        lexer.UngetToken(token_1);
+    } else {
+        Error();
+    }
+    return 0;
+}
+
+int LexicalAnalyzer::parseScope() {
+    token_1 = lexer.GetToken();
+
+    if (token_1.token_type == ID) {
+        // entering scope: token_1.lexeme contains the scope we are entering
+        string slexeme = token_1.lexeme;
+        currScope = const_cast<char *>(slexeme.c_str());
+        // next character should be a left bracket
+        token_1 = lexer.GetToken();
+
+        if (token_1.token_type == LBRACE) {
+            debugPrint("entering scope: lbrace");
+            lexer.parseVariable(PUBLIC);
+            debugPrint("parsing public variables");
+            lexer.parseVariable(PRIVATE);
+            debugPrint("parsing private variables");
+            lexer.parseStatements();
+            debugPrint("parsing statement list");
+            token_1 = lexer.GetToken();
+
+            if (token_1.token_type == RBRACE) {
+
+                debugPrint("exiting scope: rbrace");
+                remove(currScope);
+                debugPrint("deleting list");
+                if (input.EndOfInput()) {
+
+                    debugPrint("End Of Input");
+                    return 0;
+                } else {
+                    debugPrint("Not End Of Input");
+                }
+                token_1 = lexer.GetToken();
+
+                if (token_1.token_type == END_OF_FILE) {
+                    remove(currScope);
+                } else {
+                    UngetToken(token_1);
+                }
+                return 0;
+            } else {
+                Error();
+            }
+        } else {
+            Error();
+        }
+    } else {
+        Error();
+    }
+    return 0;
+}
+
+int LexicalAnalyzer::handleGlobalVariablesAndScope() {
+    token_2 = lexer.GetToken();
+    debugPrint("Check if comma or semi colon, if it is, parse global variables");
+    if (token_2.token_type == COMMA || token_2.token_type == SEMICOLON) {
+        lexer.UngetToken(token_2);
+        lexer.UngetToken(token_1);
+        debugPrint("First parse global variables if there are any");
+        lexer.parseGlobalVariables();
+        debugPrint("Parse scope");
+        lexer.parseScope();
+        debugPrint("parsed reached");
+    } else if (token_2.token_type == LBRACE) {
+        debugPrint("There are no global variables so we parse scope");
+        lexer.UngetToken(token_2);
+        lexer.UngetToken(token_1);
+        lexer.parseScope();
+        debugPrint("Parsed scope");
+    } else {
+        Error();
+    }
+}
+
+int LexicalAnalyzer::start() {
+    token_1 = lexer.GetToken();
+    if (token_1.token_type == ID) {
+        handleGlobalVariablesAndScope();
+    } else {
+        cout << "Syntax Error" << endl;
+    }
+    debugPrint("END");
+    results();
+    return 0;
+}
+
+int main() {
+    lexer.start();
 }
