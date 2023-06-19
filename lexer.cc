@@ -62,7 +62,12 @@ bool LexicalAnalyzer::SkipSpace() {
         return false;
     }
     do {
-        input.GetChar(c);
+        if(c == '\n') {
+            input.GetChar(c);
+            break;
+        } else {
+            input.GetChar(c);
+        }
         line_no += (c == '\n');
         if(c == '\n') {
             if(line_no == 18) {
@@ -72,11 +77,7 @@ bool LexicalAnalyzer::SkipSpace() {
         if(isspace(c)) {
             space_encountered = true;
         }
-    } while (!input.EndOfInput() && c == ' ');
-
-    if(c == '\n') {
-        return true;
-    }
+    } while (!input.EndOfInput() && isspace(c));
 
     if (!input.EndOfInput()) {
         input.UngetChar(c);
