@@ -1,6 +1,6 @@
 #!/bin/bash
 
-g++ lexer.cc inputbuf.cc
+g++ lexer.cc inputbuf.cc parser.cc
 
 let count=0;
 let errors=0;
@@ -30,6 +30,6 @@ done
 echo "Count: " $count;
 echo "Errors:" $errors;
 
-#rm tests/*.output
-#rm tests/*.diff
+rm tests/*.output
+rm tests/*.diff
 
