@@ -7,7 +7,7 @@
 #define __LEXER__H__
 
 #include <vector>
-#include <string>
+#include <cstring>
 
 #include "inputbuf.h"
 

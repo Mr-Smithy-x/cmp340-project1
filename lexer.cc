@@ -4,10 +4,10 @@
  * Do not share this file with anyone
  */
 #include <vector>
-#include <string>
 #include <cctype>
 
 #include "parser.h"
+#include <cstring>
 #include "lexer.h"
 
 
@@ -54,25 +54,26 @@ LexicalAnalyzer::LexicalAnalyzer() {
     tmp.token_type = ERROR;
 }
 
-bool LexicalAnalyzer::SkipSpace() {
+bool LexicalAnalyzer::SkipSpace()
+{
     char c;
     bool space_encountered = false;
 
-    if (input.EndOfInput()) {
-        return false;
+    input.GetChar(c);
+    cin.clear();
+    line_no += (c == '\n');
+
+    if(line_no == 18) { //test_names_03
+        if(c == '\n') {
+            parser.debugPrint("Failure after input.getChar().?????");
+        }
     }
-    do {
+
+    while (!input.EndOfInput() && isspace(c)) {
+        space_encountered = true;
         input.GetChar(c);
         line_no += (c == '\n');
-        if (isspace(c)) {
-            space_encountered = true;
-        }
-        if(line_no == 18) { //test_names_03
-            if(c == '\n') {
-                parser.debugPrint("Failure after input.getChar().?????");
-            }
-        }
-    } while (!input.EndOfInput() && isspace(c));
+    }
 
     if (!input.EndOfInput()) {
         input.UngetChar(c);
