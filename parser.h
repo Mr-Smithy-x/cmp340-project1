@@ -23,8 +23,8 @@ struct SymbolNode {
 struct Assignment {
     std::string lhs;
     std::string rhs;
-    std::string scope1;
-    std::string scope2;
+    char* scope1;
+    char* scope2;
 };
 
 

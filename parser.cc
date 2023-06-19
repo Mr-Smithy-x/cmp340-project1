@@ -156,8 +156,12 @@ Assignment Parser::createAssignment(Token lhs_token, Token rhs_token) {
     struct Assignment temp_assignment;
     temp_assignment.lhs = lhs_token.lexeme;
     temp_assignment.rhs = rhs_token.lexeme;
-    temp_assignment.scope1 = scope1;
-    temp_assignment.scope2 = scope2;
+    temp_assignment.scope1 = static_cast<char *>(malloc(sizeof(scope1)));
+    memcpy(temp_assignment.scope1, scope1, sizeof (scope1));
+    temp_assignment.scope2 = static_cast<char *>(malloc(sizeof(scope2)));
+    memcpy(temp_assignment.scope2, scope2, sizeof (scope2));
+    //temp_assignment.scope2 = scope2;
+    //temp_assignment.scope2 = scope2;
     assignments.push_back(temp_assignment);
     return temp_assignment;
 }
@@ -166,13 +170,13 @@ void Parser::results() {
     for (int i = 0; i < assignments.size(); i++) {
         std::cout << assignments[i].scope1;
 
-        if (::strcmp(assignments[i].scope1.c_str(), "::") != 0) {
+        if (::strcmp(assignments[i].scope1, "::") != 0) {
             std::cout << ".";
         }
 
         std::cout << assignments[i].lhs << " = " << assignments[i].scope2;
 
-        if (::strcmp(assignments[i].scope2.c_str(), "::") != 0) {
+        if (::strcmp(assignments[i].scope2, "::") != 0) {
             std::cout << ".";
         }
 
