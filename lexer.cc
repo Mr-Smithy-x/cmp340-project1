@@ -376,10 +376,10 @@ int LexicalAnalyzer::parseScope() {
             debugPrint("parsing private variables");
             lexer.parseStatements();
             debugPrint("parsing statement list");
-            results();
-            assignments.clear();
             token_1 = lexer.GetToken();
 
+            results();
+            assignments.clear();
             if (token_1.token_type == RBRACE) {
                 debugPrint("exiting scope: rbrace");
                 remove(currScope);
@@ -438,10 +438,9 @@ int LexicalAnalyzer::start() {
     if (token_1.token_type == ID) {
         handleGlobalVariablesAndScope();
     } else {
-        cout << "Syntax Error" << endl;
+        Error();
     }
     debugPrint("END");
-    results();
     return 0;
 }
 
