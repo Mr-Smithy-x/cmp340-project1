@@ -34,8 +34,8 @@ char InputBuffer::GetChar(char& c)
         c = input_buffer.back();
         input_buffer.pop_back();
     } else {
-        cin.clear();
         cin.get(c);
+        cin.clear();
     }
     return c;
 }
