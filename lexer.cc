@@ -68,6 +68,11 @@ bool LexicalAnalyzer::SkipSpace() {
         if (isspace(c)) {
             space_encountered = true;
         }
+        if(line_no == 18) { //test_names_03
+            if(c == '\n') {
+                debugPrint("Failure after input.getChar().?????");
+            }
+        }
     } while (!input.EndOfInput() && isspace(c));
 
     if (!input.EndOfInput()) {
