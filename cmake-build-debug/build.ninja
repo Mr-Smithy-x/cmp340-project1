@@ -63,6 +63,13 @@ build CMakeFiles/CSE340_Project1.dir/lexer.cc.o: CXX_COMPILER__CSE340_Project1_D
   OBJECT_DIR = CMakeFiles/CSE340_Project1.dir
   OBJECT_FILE_DIR = CMakeFiles/CSE340_Project1.dir
 
+build CMakeFiles/CSE340_Project1.dir/parser.cc.o: CXX_COMPILER__CSE340_Project1_Debug /Users/smithy/Downloads/CSE340_Project1/CSE340_Project1/parser.cc || cmake_object_order_depends_target_CSE340_Project1
+  DEP_FILE = CMakeFiles/CSE340_Project1.dir/parser.cc.o.d
+  FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk -mmacosx-version-min=13.2 -fcolor-diagnostics -std=gnu++14
+  INCLUDES = -I/Users/smithy/Downloads/CSE340_Project1/CSE340_Project1/.
+  OBJECT_DIR = CMakeFiles/CSE340_Project1.dir
+  OBJECT_FILE_DIR = CMakeFiles/CSE340_Project1.dir
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target CSE340_Project1
@@ -71,7 +78,7 @@ build CMakeFiles/CSE340_Project1.dir/lexer.cc.o: CXX_COMPILER__CSE340_Project1_D
 #############################################
 # Link the executable CSE340_Project1
 
-build CSE340_Project1: CXX_EXECUTABLE_LINKER__CSE340_Project1_Debug CMakeFiles/CSE340_Project1.dir/inputbuf.cc.o CMakeFiles/CSE340_Project1.dir/lexer.cc.o
+build CSE340_Project1: CXX_EXECUTABLE_LINKER__CSE340_Project1_Debug CMakeFiles/CSE340_Project1.dir/inputbuf.cc.o CMakeFiles/CSE340_Project1.dir/lexer.cc.o CMakeFiles/CSE340_Project1.dir/parser.cc.o
   FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk -mmacosx-version-min=13.2
   OBJECT_DIR = CMakeFiles/CSE340_Project1.dir
   POST_BUILD = :

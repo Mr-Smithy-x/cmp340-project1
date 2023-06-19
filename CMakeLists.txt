@@ -9,4 +9,4 @@ add_executable(CSE340_Project1
         inputbuf.cc
         inputbuf.h
         lexer.cc
-        lexer.h parser.cc)
+        lexer.h parser.cc parser.h)
