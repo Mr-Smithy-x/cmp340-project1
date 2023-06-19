@@ -58,13 +58,24 @@ bool LexicalAnalyzer::SkipSpace() {
     char c;
     bool space_encountered = false;
 
-    input.GetChar(c);
-    line_no += (c == '\n');
-
-    while (!input.EndOfInput() && isspace(c)) {
-        space_encountered = true;
+    if(input.EndOfInput()) {
+        return false;
+    }
+    do {
         input.GetChar(c);
         line_no += (c == '\n');
+        if(c == '\n') {
+            if(line_no == 18) {
+                debugPrint("Something?");
+            }
+        }
+        if(isspace(c)) {
+            space_encountered = true;
+        }
+    } while (!input.EndOfInput() && c == ' ');
+
+    if(c == '\n') {
+        return true;
     }
 
     if (!input.EndOfInput()) {
@@ -203,8 +214,8 @@ bool LexicalAnalyzer::SkipComment() {
         }
     } else {
         input.UngetChar(c);
-        return comment;
     }
+    return comment;
 }
 
 int LexicalAnalyzer::parseGlobalVariables() {
@@ -318,6 +329,7 @@ int LexicalAnalyzer::parseVariables() {
     } else {
         Error();
     }
+    return 0;
 }
 
 int LexicalAnalyzer::parseVariable(TokenType visibility) {
@@ -427,6 +439,7 @@ int LexicalAnalyzer::handleGlobalVariablesAndScope() {
     } else {
         Error();
     }
+    return 0;
 }
 
 int LexicalAnalyzer::start() {
