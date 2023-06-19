@@ -44,6 +44,7 @@ string reserved[] = {"END_OF_FILE",
 string keyword[] = {"public", "private"};
 
 LexicalAnalyzer lexer;
+Parser parser;
 Token token_1, token_2, token_3;
 
 
@@ -70,7 +71,7 @@ bool LexicalAnalyzer::SkipSpace() {
         }
         if(line_no == 18) { //test_names_03
             if(c == '\n') {
-                debugPrint("Failure after input.getChar().?????");
+                parser.debugPrint("Failure after input.getChar().?????");
             }
         }
     } while (!input.EndOfInput() && isspace(c));
@@ -222,10 +223,10 @@ int LexicalAnalyzer::parseGlobalVariables() {
         lexer.parseVariables();
         token_1 = lexer.GetToken();
         if (token_1.token_type != SEMICOLON) {
-            Error();
+            parser.Error();
         }
     } else {
-        Error();
+        parser.Error();
     }
     return 0;
 }
@@ -245,16 +246,16 @@ int LexicalAnalyzer::parseStatements() {
             lexer.UngetToken(token_2);
             return 0;
         } else {
-            Error();
+            parser.Error();
         }
     } else {
-        Error();
+        parser.Error();
     }
     return 0;
 }
 
 int LexicalAnalyzer::parseStatement() {
-    debugPrint("Parse Statement Reach");
+    parser.debugPrint("Parse Statement Reach");
     token_1 = lexer.GetToken();
     if (token_1.token_type == ID) { // token_1 ? ?
         token_2 = lexer.GetToken();
@@ -262,30 +263,30 @@ int LexicalAnalyzer::parseStatement() {
             token_3 = lexer.GetToken();
             // Next statement should be id, if not error
             if (token_3.token_type == ID) { // lhs(token_1) =(token_2)  (rhs)token_3
-                createAssignment(token_1, token_3);
+                parser.createAssignment(token_1, token_3);
                 token_1 = lexer.GetToken();
                 // Statement should end in semicolon, if not error
                 if (token_1.token_type == SEMICOLON) { // lhs(token_1) =(token_2)  (rhs)token_3;
-                    debugPrint("Ends in Semi Colon");
+                    parser.debugPrint("Ends in Semi Colon");
                     return 0;
                 } else {
-                    Error();
+                    parser.Error();
                 }
             } else {
-                Error();
+                parser.Error();
             }
         } else if (token_2.token_type == LBRACE) {
             // token_1 { -> meaning we will be entering a scope because of left brace
-            currScope = const_cast<char *>((token_1.lexeme).c_str());
+            parser.currScope = const_cast<char *>((token_1.lexeme).c_str());
             lexer.UngetToken(token_2);
             lexer.UngetToken(token_1);
             lexer.parseScope();
         } else {
             // failure
-            Error();
+            parser.Error();
         }
     } else {
-        Error();
+        parser.Error();
     }
     return 0;
 }
@@ -299,9 +300,9 @@ int LexicalAnalyzer::parseVariables() {
     char *variable = (char *) malloc(lexemeSize);
     memcpy(variable, token_1.lexeme.c_str(), tokenSize);
 
-    add(variable);
+    parser.add(variable);
 
-    SymbolNode *temp1 = symbolNode;
+    SymbolNode *temp1 = parser.symbolNode;
 
     // Go down the node list
     while (temp1 != NULL) {
@@ -321,10 +322,10 @@ int LexicalAnalyzer::parseVariables() {
             UngetToken(token_1);
             return 0;
         } else {
-            Error();
+            parser.Error();
         }
     } else {
-        Error();
+        parser.Error();
     }
     return 0;
 }
@@ -332,7 +333,7 @@ int LexicalAnalyzer::parseVariables() {
 int LexicalAnalyzer::parseVariable(TokenType visibility) {
     token_1 = lexer.GetToken();
     if (token_1.token_type == visibility) {
-        currLevel = visibility;
+        parser.currLevel = visibility;
         token_1 = lexer.GetToken();
         // after visibility scope, ie public or private, next character should be a colon if not error
         if (token_1.token_type == COLON) {
@@ -345,13 +346,13 @@ int LexicalAnalyzer::parseVariable(TokenType visibility) {
                 token_1 = lexer.GetToken();
                 // if it is not semicolon then we have an error
                 if (token_1.token_type != SEMICOLON) {
-                    Error();
+                    parser.Error();
                 }
             } else {
-                Error();
+                parser.Error();
             }
         } else {
-            Error();
+            parser.Error();
         }
     } else if (token_1.token_type != visibility || token_1.token_type == ID) {
         // since we know that token_type should be the visibility that we're looking for
@@ -359,7 +360,7 @@ int LexicalAnalyzer::parseVariable(TokenType visibility) {
         // exit the scenario
         lexer.UngetToken(token_1);
     } else {
-        Error();
+        parser.Error();
     }
     return 0;
 }
@@ -370,69 +371,69 @@ int LexicalAnalyzer::parseScope() {
     if (token_1.token_type == ID) {
         // entering scope: token_1.lexeme contains the scope we are entering
         string slexeme = token_1.lexeme;
-        currScope = const_cast<char *>(slexeme.c_str());
+        parser.currScope = const_cast<char *>(slexeme.c_str());
         // next character should be a left bracket
         token_1 = lexer.GetToken();
 
         if (token_1.token_type == LBRACE) {
-            debugPrint("entering scope: lbrace");
+            parser.debugPrint("entering scope: lbrace");
             lexer.parseVariable(PUBLIC);
-            debugPrint("parsing public variables");
+            parser.debugPrint("parsing public variables");
             lexer.parseVariable(PRIVATE);
-            debugPrint("parsing private variables");
+            parser.debugPrint("parsing private variables");
             lexer.parseStatements();
-            debugPrint("parsing statement list");
+            parser.debugPrint("parsing statement list");
             token_1 = lexer.GetToken();
 
             if (token_1.token_type == RBRACE) {
-                debugPrint("exiting scope: rbrace");
-                remove(currScope);
-                debugPrint("deleting list");
+                parser.debugPrint("exiting scope: rbrace");
+                remove(parser.currScope);
+                parser.debugPrint("deleting list");
                 if (input.EndOfInput()) {
-                    debugPrint("End Of Input");
+                    parser.debugPrint("End Of Input");
                     return 0;
                 } else {
-                    debugPrint("Not End Of Input");
+                    parser.debugPrint("Not End Of Input");
                 }
                 token_1 = lexer.GetToken();
 
                 if (token_1.token_type == END_OF_FILE) {
-                    remove(currScope);
+                    remove(parser.currScope);
                 } else {
                     UngetToken(token_1);
                 }
                 return 0;
             } else {
-                Error();
+                parser.Error();
             }
         } else {
-            Error();
+            parser.Error();
         }
     } else {
-        Error();
+        parser.Error();
     }
     return 0;
 }
 
 int LexicalAnalyzer::handleGlobalVariablesAndScope() {
     token_2 = lexer.GetToken();
-    debugPrint("Check if comma or semi colon, if it is, parse global variables");
+    parser.debugPrint("Check if comma or semi colon, if it is, parse global variables");
     if (token_2.token_type == COMMA || token_2.token_type == SEMICOLON) {
         lexer.UngetToken(token_2);
         lexer.UngetToken(token_1);
-        debugPrint("First parse global variables if there are any");
+        parser.debugPrint("First parse global variables if there are any");
         lexer.parseGlobalVariables();
-        debugPrint("Parse scope");
+        parser.debugPrint("Parse scope");
         lexer.parseScope();
-        debugPrint("parsed reached");
+        parser.debugPrint("parsed reached");
     } else if (token_2.token_type == LBRACE) {
-        debugPrint("There are no global variables so we parse scope");
+        parser.debugPrint("There are no global variables so we parse scope");
         lexer.UngetToken(token_2);
         lexer.UngetToken(token_1);
         lexer.parseScope();
-        debugPrint("Parsed scope");
+        parser.debugPrint("Parsed scope");
     } else {
-        Error();
+        parser.Error();
     }
     return 0;
 }
@@ -442,10 +443,10 @@ int LexicalAnalyzer::start() {
     if (token_1.token_type == ID) {
         handleGlobalVariablesAndScope();
     } else {
-        Error();
+        parser.Error();
     }
-    debugPrint("END");
-    results();
+    parser.debugPrint("END");
+    parser.results();
     return 0;
 }
 
