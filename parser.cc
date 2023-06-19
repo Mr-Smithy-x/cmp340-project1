@@ -156,10 +156,10 @@ Assignment Parser::createAssignment(Token lhs_token, Token rhs_token) {
     struct Assignment temp_assignment;
     temp_assignment.lhs = lhs_token.lexeme;
     temp_assignment.rhs = rhs_token.lexeme;
-    temp_assignment.scope1 = static_cast<char *>(malloc(sizeof(scope1)));
-    memcpy(temp_assignment.scope1, scope1, sizeof (scope1));
-    temp_assignment.scope2 = static_cast<char *>(malloc(sizeof(scope2)));
-    memcpy(temp_assignment.scope2, scope2, sizeof (scope2));
+    temp_assignment.scope1 = static_cast<char *>(malloc(sizeof(char) * strlen(scope1) ));
+    memcpy(temp_assignment.scope1, scope1, sizeof (char) * strlen(scope1));
+    temp_assignment.scope2 = static_cast<char *>(malloc(sizeof(char) * strlen(scope2)));
+    memcpy(temp_assignment.scope2, scope2, sizeof (char) * strlen(scope2));
     //temp_assignment.scope2 = scope2;
     //temp_assignment.scope2 = scope2;
     assignments.push_back(temp_assignment);
