@@ -60,7 +60,6 @@ bool LexicalAnalyzer::SkipSpace()
     bool space_encountered = false;
 
     input.GetChar(c);
-    cin.clear();
     line_no += (c == '\n');
 
     if(line_no == 18) { //test_names_03
