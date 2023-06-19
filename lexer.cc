@@ -3,8 +3,6 @@
  *
  * Do not share this file with anyone
  */
-#include <iostream>
-#include <istream>
 #include <vector>
 #include <string>
 #include <cctype>
@@ -387,7 +385,7 @@ int LexicalAnalyzer::parseScope() {
 
             if (token_1.token_type == RBRACE) {
                 parser.debugPrint("exiting scope: rbrace");
-                remove(parser.currScope);
+                parser.remove(parser.currScope);
                 parser.debugPrint("deleting list");
                 if (input.EndOfInput()) {
                     parser.debugPrint("End Of Input");
@@ -398,7 +396,7 @@ int LexicalAnalyzer::parseScope() {
                 token_1 = lexer.GetToken();
 
                 if (token_1.token_type == END_OF_FILE) {
-                    remove(parser.currScope);
+                    parser.remove(parser.currScope);
                 } else {
                     UngetToken(token_1);
                 }
