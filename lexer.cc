@@ -58,23 +58,13 @@ bool LexicalAnalyzer::SkipSpace() {
     char c;
     bool space_encountered = false;
 
-    if(input.EndOfInput()) {
+    if (input.EndOfInput()) {
         return false;
     }
     do {
-        if(c == '\n') {
-            input.GetChar(c);
-            break;
-        } else {
-            input.GetChar(c);
-        }
+        input.GetChar(c);
         line_no += (c == '\n');
-        if(c == '\n') {
-            if(line_no == 18) {
-                debugPrint("Something?");
-            }
-        }
-        if(isspace(c)) {
+        if (isspace(c)) {
             space_encountered = true;
         }
     } while (!input.EndOfInput() && isspace(c));
@@ -320,7 +310,7 @@ int LexicalAnalyzer::parseVariables() {
             lexer.parseVariables();
             return 0;
         }
-        // if next token is semicon, we reach end of parsing variables
+            // if next token is semicon, we reach end of parsing variables
         else if (token_1.token_type == SEMICOLON) {
             UngetToken(token_1);
             return 0;
@@ -386,15 +376,15 @@ int LexicalAnalyzer::parseScope() {
             debugPrint("parsing private variables");
             lexer.parseStatements();
             debugPrint("parsing statement list");
+            results();
+            assignments.clear();
             token_1 = lexer.GetToken();
 
             if (token_1.token_type == RBRACE) {
-
                 debugPrint("exiting scope: rbrace");
                 remove(currScope);
                 debugPrint("deleting list");
                 if (input.EndOfInput()) {
-
                     debugPrint("End Of Input");
                     return 0;
                 } else {

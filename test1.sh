@@ -30,6 +30,6 @@ done
 echo "Count: " $count;
 echo "Errors:" $errors;
 
-rm tests/*.output
-rm tests/*.diff
+#rm tests/*.output
+#rm tests/*.diff
 
